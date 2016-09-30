@@ -1,0 +1,7 @@
+<url>
+    <Node
+        name="getWeather"
+        type="GET"
+        expired="0"
+        url="https://www.baidu.com/"/>
+</url>
