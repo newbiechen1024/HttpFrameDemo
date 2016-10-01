@@ -5,6 +5,7 @@ import android.util.Log;
 import com.newbiechen.httpframedemo.net.base.Request;
 import com.newbiechen.httpframedemo.net.base.RequestParameter;
 import com.newbiechen.httpframedemo.net.base.Response;
+import com.newbiechen.httpframedemo.utils.IOUtils;
 
 import java.io.BufferedReader;
 import java.io.Closeable;
@@ -14,6 +15,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLDecoder;
 
 /**
  * Created by PC on 2016/9/29.
@@ -78,8 +80,7 @@ public class NetWork implements Runnable {
             sendPostData(conn);
         }
         //读取传输回来的数据
-        String data = new String(readData(conn).getBytes(),"UTF-8");
-        Log.d(TAG,conn.getResponseCode()+data);
+        String data = readData(conn);
         return  new Response(conn.getResponseCode(),data);
     }
 
@@ -97,7 +98,7 @@ public class NetWork implements Runnable {
             e.printStackTrace();
             Log.d(TAG,"输出流读取错误");
         } finally {
-            close(os);
+            IOUtils.closeStream(os);
         }
     }
 
@@ -111,35 +112,13 @@ public class NetWork implements Runnable {
         String data = "";
         try {
             is = connection.getInputStream();
-            InputStreamReader reader = new InputStreamReader(is);
-            BufferedReader br = new BufferedReader(reader);
-            StringBuilder stringBuilder = new StringBuilder();
-            String str = null;
-            while ((str = br.readLine()) != null){
-                stringBuilder.append(str);
-            }
-            data = stringBuilder.toString();
+            data = IOUtils.input2Str(is);
         } catch (IOException e) {
             e.printStackTrace();
             Log.d(TAG,"获取输入流错误");
         }finally {
-            close(is);
+            IOUtils.closeStream(is);
         }
         return data;
-    }
-
-    /**
-     * 关闭数据流
-     * @param closeable
-     */
-    private void close (Closeable closeable){
-        try {
-            if (closeable != null){
-                closeable.close();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            Log.d(TAG,"关闭流出错");
-        }
     }
 }

@@ -1,6 +1,7 @@
 package com.newbiechen.httpframedemo.net.base;
 
 import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import com.newbiechen.httpframedemo.net.work.NetWork;
@@ -8,6 +9,7 @@ import com.newbiechen.httpframedemo.net.work.NetWork;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * Created by PC on 2016/9/28.
@@ -20,14 +22,19 @@ public class Request implements Comparable<Request>{
     public static final String GET = "GET";
     public static final String POST= "POST";
     public static final String OPTIONS = "OPTIONS";
+    protected static final String CONTENT_TYPE = "Content-Type:";
+    protected static final String TYPE_TEXT = "text/plain;charset=";
+    protected static final String DEFAULT_CHARSET = "UTF-8";
+    protected final List<RequestParameter> mHeaderParamList = new ArrayList<>();
+    protected final List<RequestParameter> mBodyParamList = new ArrayList<>();
 
-    protected final List<RequestParameter> mHeaderParam = new ArrayList<>();
-    protected final List<RequestParameter> mRequestParam = new ArrayList<>();
-    private final Handler mHandler = new Handler();
+    //Handler必须是在主线程中，保证回调在主线程中发生
+    private final Handler mHandler = new Handler(Looper.getMainLooper());
 
     private RequestCallback mCallBack;
     private String mUrlPath;
 
+    protected String mCharSet = DEFAULT_CHARSET;
     //默认为GET请求
     protected String mRequestType = GET;
     protected Priority mPriority = Priority.NORMAL;
@@ -85,9 +92,14 @@ public class Request implements Comparable<Request>{
         mCallBack = callback;
     }
 
-    public void addHeaderParam(String key, String value){
+    public Request addHeaderParam(String key, String value){
         RequestParameter parameter = new RequestParameter(key,value);
-        mHeaderParam.add(parameter);
+        mHeaderParamList.add(parameter);
+        return this;
+    }
+
+    public void addHeaderParams(List<RequestParameter> headerParams){
+        mHeaderParamList.addAll(headerParams);
     }
 
     /**
@@ -95,9 +107,18 @@ public class Request implements Comparable<Request>{
      * @param key    参数名
      * @param value  参数值
      */
-    public void addRequestParam(String key, String value){
+    public Request addBodyParam(String key, String value){
         RequestParameter parameter = new RequestParameter(key,value);
-        mRequestParam.add(parameter);
+        mBodyParamList.add(parameter);
+        return this;
+    }
+
+    public void addRequestParams(List<RequestParameter> bodyParams){
+        mBodyParamList.addAll(bodyParams);
+    }
+
+    public void setCharset(String charset){
+        mCharSet = charset;
     }
 
     /**
@@ -113,7 +134,7 @@ public class Request implements Comparable<Request>{
      * */
     public List<RequestParameter> getHeaders(){
         //防止数据被篡改
-        return Collections.unmodifiableList(mHeaderParam);
+        return Collections.unmodifiableList(mHeaderParamList);
     }
 
     public String getUrlPath(){
@@ -142,8 +163,8 @@ public class Request implements Comparable<Request>{
         if (requestType.equals(GET)){
             builder.append(mUrlPath);
         }
-        for(int i=0; i<mRequestParam.size(); ++i){
-            RequestParameter requestParameter = mRequestParam.get(i);
+        for(int i = 0; i< mBodyParamList.size(); ++i){
+            RequestParameter requestParameter = mBodyParamList.get(i);
             if (i == 0 && requestType.equals(GET)){
                 builder.append("?");
             }
@@ -185,6 +206,10 @@ public class Request implements Comparable<Request>{
      * */
     public String getBodyContent(){
         return spliceValue(POST);
+    }
+
+    public String getBodyContentType(){
+        return CONTENT_TYPE+TYPE_TEXT+mCharSet;
     }
 
     public Priority getRequestPriority(){

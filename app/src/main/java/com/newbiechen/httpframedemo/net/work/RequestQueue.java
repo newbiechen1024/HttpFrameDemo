@@ -32,8 +32,7 @@ public class RequestQueue{
 
 
     /**
-     * 添加请求到线程池
-     *
+     * 添加请求到线程池中
      * */
     public void addRequest(Request request){
         //加入线程池
@@ -52,7 +51,5 @@ public class RequestQueue{
         for (Future future : mFutureList){
             future.cancel(false);
         }
-
     }
-
 }

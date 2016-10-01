@@ -1,9 +1,11 @@
-package com.newbiechen.httpframedemo.net;
+package com.newbiechen.httpframedemo.net.utils;
 
 import android.content.Context;
 import android.content.res.AssetManager;
+import android.util.Log;
 
 import com.newbiechen.httpframedemo.net.base.UrlData;
+import com.newbiechen.httpframedemo.utils.IOUtils;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -14,6 +16,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URL;
 
 /**
  * Created by PC on 2016/9/30.
@@ -21,6 +24,8 @@ import java.io.InputStreamReader;
  * 解析xml数据
  */
 public final class UrlManager {
+    private static final String TAG = "UrlManager";
+
     private static Context sContext;
     private static String sUrlData;
     private UrlManager(Context context){
@@ -40,40 +45,23 @@ public final class UrlManager {
         InputStream is = null;
         try {
             is = assetManager.open("url");
-            InputStreamReader isr = new InputStreamReader(is);
-            BufferedReader br = new BufferedReader(isr);
-            StringBuilder sb = new StringBuilder();
-            String str = null;
-            while ((str = br.readLine()) != null){
-                sb.append(str);
-            }
-            sUrlData = sb.toString();
+            sUrlData = IOUtils.input2Str(is);
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            if (is != null){
-                try {
-                    is.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+            IOUtils.closeStream(is);
         }
     }
     public static UrlData parseUrlData(String name){
         ByteArrayInputStream bais = new ByteArrayInputStream(sUrlData.getBytes());
-        UrlData urlData = null;
+        UrlData urlData = new UrlData();
         try {
             XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
             XmlPullParser parser = factory.newPullParser();
-
             parser.setInput(bais,"UTF-8");
             int eventType = parser.getEventType();
             while (eventType != XmlPullParser.END_DOCUMENT){
                 switch (eventType){
-                    case XmlPullParser.START_DOCUMENT:
-                        urlData = new UrlData();
-                        break;
                     case XmlPullParser.START_TAG:
                         if (parser.getName().equals("Node") &&
                                 parser.getAttributeValue(null,"name").equals(name)){
@@ -92,7 +80,11 @@ public final class UrlManager {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            IOUtils.closeStream(bais);
         }
+
+        Log.d(TAG, urlData.toString());
         return urlData;
     }
 }

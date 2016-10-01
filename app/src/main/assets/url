@@ -1,7 +1,7 @@
 <url>
     <Node
-        name="getWeather"
-        type="GET"
+        name="loginZhiHu"
+        type="POST"
         expired="0"
-        url="https://www.baidu.com/"/>
+        url="https://www.zhihu.com/login/phone_num"/>
 </url>
